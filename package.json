@@ -1,0 +1,19 @@
+{
+  "name": "infinitic",
+  "version": "1.0.0",
+  "description": "Infinitely-nested Tic-Tac-Toe",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "therealkevind",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/builders": "^0.15.0",
+    "@discordjs/rest": "^0.5.0",
+    "canvas": "^2.9.3",
+    "discord-api-types": "^0.35.0",
+    "discord.js": "^13.8.1"
+  },
+  "type": "module"
+}
