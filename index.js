@@ -6,7 +6,7 @@ import { token } from './config.json' assert { type: "json" };
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
 client.commands = new Collection();
-const commandsPath = path.join(path.dirname(import.meta.url), 'commands');
+const commandsPath = new URL(`./commands`, import.meta.url);
 const commandFiles = (await fs.readdir(commandsPath)).filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
