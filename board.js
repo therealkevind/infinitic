@@ -25,7 +25,7 @@ export class Board {
       if (typeof value == "symbol") {
         return value == X ? 1 : 0;
       } else return value;
-    }) : {winner: value.#winner, subboards: value.#subboards};
+    }) : {winner: this.#winner, subboards: this.#subboards};
   }
   static reviver(key, value) {
     if (typeof value == "number") {
@@ -34,8 +34,9 @@ export class Board {
         case 0: return O;
         default: throw new SyntaxError("invalid Board json");
       }
-    } else if (typeof value == "object" && !Array.isArray(value)) {
-      return new Board(value.subboards, value.winner);
+    } else if (typeof value == "string") {
+      const val = Board.fromJSON(value);
+      return new Board(val.subboards, val.winner);
     } else return value;
   }
   static fromJSON(json) {
@@ -243,6 +244,8 @@ export class Game {
   #moveRequirements;
 
   constructor(board, whoseTurn, lastTurn, extraData) {
+    if (!(board instanceof Board)) throw new TypeError("expected a Board");
+    if (whoseTurn != X && whoseTurn != O) throw new TypeError("expected a tic-tac-toe piece");
     this.#board = board;
     this.#whoseTurn = whoseTurn;
     this.#lastTurn = lastTurn;
@@ -251,19 +254,18 @@ export class Game {
   }
 
   static empty(board, firstPlayer = X) {
-    if (!(board instanceof Board)) throw new TypeError("expected a Board");
-    if (firstPlayer != O && firstPlayer != X) throw new TypeError("expected a tic-tac-toe piece");
     return new Game(board, firstPlayer, null);
   }
 
   toJSON() {
-    return {board: obj.#board, whoseTurn: obj.#whoseTurn, lastTurn: obj.#lastTurn, extraData};
+    return {board: this.#board, whoseTurn: this.#whoseTurn == X ? 1 : 0, lastTurn: this.#lastTurn.map(i => i.toString()), extraData: this.extraData};
   }
 
   static fromJSON(json) {
     return JSON.parse(json, (key, value) => {
-      if (key) return Board.reviver(key, value);
-      else return new Game(value.board, value.whoseTurn, value.lastTurn, value.extraData);
+      if (key == "board") return Board.reviver(key, value);
+      else if (key) return value;
+      else return new Game(value.board, value.whoseTurn ? X : O, value.lastTurn?.map(i => BigInt(i)), value.extraData);
     })
   }
 
@@ -356,7 +358,15 @@ export class Game {
       }
     }
     ctx.restore();
+  }
 
+  requirementsAreTrivial() {
+    const [rx, ry] = this.#moveRequirements;
+    return rx.min == 0 && ry.min == 0 && rx.max == this.#board.size && ry.max == this.#board.size;
+  }
+  requirementsA1() {
+    const [rx, ry] = this.#moveRequirements;
+    return `${Board.numberToLetters(rx.min + 1n)}${ry.min + 1n}:${Board.numberToLetters(rx.max)}${ry.max}`
   }
 
   get winner() { return this.#board.winner; }
