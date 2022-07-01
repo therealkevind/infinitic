@@ -77,14 +77,20 @@ export class Board {
     return this.#subboards?.[y / this.#subwidth % Board.#SIZE][x / this.#subwidth % Board.#SIZE];
   }
 
-  // puts the symbol, and returns whether this board was won as a result of the move. does not error-check.
+  // puts the symbol, and returns whether this board was won or tied as a result of the move. does not error-check.
   #put(symbol, x, y) {
     if (!this.#subboards || (
       this.#subboard(x, y).#put(symbol, x, y) && this.#checkWinner(symbol, x, y)
     )) {
       this.#winner = symbol;
       return true;
-    } else return false;
+    } else {
+      if (this.#subboards.every(row => row.every(subboard => subboard.#winner))) {
+        this.#winner = true;
+        return true;
+      }
+      return false;
+    }
   }
 
   // did the given move win this board?
@@ -182,7 +188,7 @@ export class Board {
     return this.#rangeWith(x, y);
   }
   #rangeWith(x, y) {
-    if (this.#winner || !this.#subboards || this.#subboards.every(row => row.every(board => board.winner))) {
+    if (this.#winner || !this.#subboards || this.#subboards.every(row => row.every(board => board.#winner))) {
       return false;
     } else {
       const nextRange = this.#subboard(x, y).#rangeWith(x % this.#subwidth, y % this.#subwidth);
@@ -287,6 +293,7 @@ export class Game {
       } else this.#whoseTurn = (this.#whoseTurn == X) ? O : X;
       this.#lastTurn = [x,y];
       this.#moveRequirements = this.#board.rangeFollowing(x, y);
+      return !this.#whoseTurn;
     } else throw new ValueError("invalid move");
   }
   getSize() { return 20 * Number(Board.SIZE + 1n) ** (Math.log(Number(this.#board.size))/Math.log(Number(Board.SIZE))); }
@@ -314,8 +321,8 @@ export class Game {
     ctx.textBaseline = "middle";
     ctx.fillStyle = "black";
     for (let i = 0n; i < this.#board.size; i++) {
-      ctx.globalAlpha = this.#moveRequirements[0].contains(i) ? 1 : .5;
-      ctx.font = this.#moveRequirements[0].contains(i) ? "bold 1px Calibri" : "1px Calibri";
+      ctx.globalAlpha = this.#moveRequirements[0]?.contains(i) ? 1 : .5;
+      ctx.font = this.#moveRequirements[0]?.contains(i) ? "bold 1px Calibri" : "1px Calibri";
       // centered in a 1 wide by .5 tall rectangle
       ctx.fillText(Board.numberToLetters(i + 1n), .5, -.25);
       {
@@ -343,8 +350,8 @@ export class Game {
     ctx.textBaseline = "middle";
     ctx.fillStyle = "black";
     for (let i = 0n; i < this.#board.size; i++) {
-      ctx.globalAlpha = this.#moveRequirements[1].contains(i) ? 1 : .5;
-      ctx.font = this.#moveRequirements[1].contains(i) ? "bold 1px Calibri" : "1px Calibri";
+      ctx.globalAlpha = this.#moveRequirements[1]?.contains(i) ? 1 : .5;
+      ctx.font = this.#moveRequirements[1]?.contains(i) ? "bold 1px Calibri" : "1px Calibri";
       // centered in a 1 wide by .5 tall rectangle
       ctx.fillText(String(i + 1n), 0.25, .5);
       {

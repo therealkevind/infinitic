@@ -2,7 +2,7 @@ import {X, O, Board, Game} from "./board.js";
 
 document.addEventListener("DOMContentLoaded", ()=>{
 
-  const game = Game.empty(Board.nested(2n));
+  const game = Game.empty(Board.nested(1n));
 
   const gameCanvas = document.getElementById("game-board"),
     coordInput = document.getElementById("coords"),
@@ -23,7 +23,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
       if (!game.isValid(x, y)) alert("Coordinates are outside the usable range!");
       else if (!game.isOpen(x, y)) alert("Those coordinates are taken!");
       else {
-        if (game.play(x, y)) alert(game.winner + " wins!");
+        if (game.play(x, y)) switch (game.winner) {
+          case "X": alert("X wins!"); break;
+          case "O": alert("O wins!"); break;
+          default: alert("It's a tie.");
+        }
         game.draw(gameCanvas);
       }
     } else alert("Invalid coordinates!");
