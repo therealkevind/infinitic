@@ -313,7 +313,7 @@ export class Game {
     ctx.fillStyle = "black";
     for (let i = 0n; i < this.#board.size; i++) {
       ctx.globalAlpha = this.#moveRequirements[0].contains(i) ? 1 : .5;
-      ctx.font = this.#moveRequirements[0].contains(i) ? "bold 1px sans-serif" : "1px sans-serif";
+      ctx.font = this.#moveRequirements[0].contains(i) ? "bold 1px Calibri" : "1px Calibri";
       // centered in a 1 wide by .5 tall rectangle
       ctx.fillText(Board.numberToLetters(i + 1n), .5, -.25);
       {
@@ -336,13 +336,13 @@ export class Game {
       ctx.translate(0, .5/K);
       ctx.scale(1/K, 1/K);
     }
-    ctx.translate(0,-0.2)
+    ctx.translate(0,-0.2);
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "black";
     for (let i = 0n; i < this.#board.size; i++) {
       ctx.globalAlpha = this.#moveRequirements[1].contains(i) ? 1 : .5;
-      ctx.font = this.#moveRequirements[1].contains(i) ? "bold 1px sans-serif" : "1px sans-serif";
+      ctx.font = this.#moveRequirements[1].contains(i) ? "bold 1px Calibri" : "1px Calibri";
       // centered in a 1 wide by .5 tall rectangle
       ctx.fillText(String(i + 1n), 0.25, .5);
       {

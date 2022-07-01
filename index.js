@@ -1,17 +1,17 @@
 import * as fs from 'node:fs/promises';
 import path from 'node:path';
-import { Client, Intents } from 'discord.js';
-import { token } from './config.json' assert { type: "json" };
+import { Client, Collection, Intents } from 'discord.js';
+import config from './config.json' assert { type: "json" };
+const { token } = config;
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
-client.commands = new Collection();
-const commandsPath = new URL(`./commands`, import.meta.url);
+client.commands = new Map();
+const commandsPath = new URL('./commands/', import.meta.url);
 const commandFiles = (await fs.readdir(commandsPath)).filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-  const filePath = path.join(commandsPath, file);
-  const command = await import(filePath);
+  const command = await import("./commands/" + file);
   client.commands.set(command.data.name, command);
 }
 

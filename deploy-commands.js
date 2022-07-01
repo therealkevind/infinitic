@@ -6,12 +6,11 @@ import config from './config.json' assert { type: "json" };
 const { clientId, token } = config;
 
 const commands = [];
-const commandsPath = new URL('./commands', import.meta.url);
+const commandsPath = new URL('./commands/', import.meta.url);
 const commandFiles = (await fs.readdir(commandsPath)).filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-  const filePath = path.join(commandsPath, file);
-  const command = await import(filePath);
+  const command = await import("./commands/" + file);
   commands.push(command.data.toJSON());
 }
 
