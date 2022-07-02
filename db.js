@@ -49,7 +49,6 @@ export async function update(id) {
   await fs.writeFile(urlFor(id), JSON.stringify(map.get(id)));
 }
 export async function set(id, board) {
-  console.log("heh");
   await fs.writeFile(urlFor(id), JSON.stringify(board), { encoding: "utf8", flag: "wx" });
   map.set(id, board);
 }

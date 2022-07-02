@@ -264,7 +264,7 @@ export class Game {
   }
 
   toJSON() {
-    return {board: this.#board, whoseTurn: this.#whoseTurn == X ? 1 : 0, lastTurn: this.#lastTurn.map(i => i.toString()), extraData: this.extraData};
+    return {board: this.#board, whoseTurn: this.#whoseTurn == X ? 1 : 0, lastTurn: this.#lastTurn?.map(i => i.toString()), extraData: this.extraData};
   }
 
   static fromJSON(json) {

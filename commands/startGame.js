@@ -3,7 +3,7 @@ import draw from "../draw.js";
 import * as db from "../db.js";
 
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { MessageActionRow, MessageButton, Message } from 'discord.js';
+import { MessageActionRow, MessageButton } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('start-game')
@@ -12,8 +12,8 @@ export const data = new SlashCommandBuilder()
   .addUserOption(option => option.setName("opponent").setDescription("who to play against").setRequired(true))
   .addStringOption(option => option.setName("symbol").setDescription("which symbol you want to use")
     .addChoices({ name: "X", value: "X" }, { name: "O", value: "O" }));
-export async function execute(interaction) {
 
+export async function execute(interaction) {
   if (!interaction.inGuild()) {
     return interaction.reply({ content: `Sorry, DMs aren't supported at the moment.`, ephemeral: true });
   }
@@ -57,7 +57,7 @@ export async function execute(interaction) {
         game.extraData.X = opponent.id;
         game.extraData.O = user.id;
       }
-      game.extraData.lastInteraction = (await interaction.followUp({ content: `I flipped a coin: ${xGoesFirst == (symbol == X) ? opponent : user} gets to go first as ${xGoesFirst ? "X" : "O"}!\n(Use \`/play\` to choose a location; you can play anywhere this turn. ${xGoesFirst == (symbol == X) ? user : opponent} plays next.)`, files: [draw(game)] })).id;
+      game.extraData.lastInteraction = (await interaction.followUp({ content: `${xGoesFirst == (symbol == X) ? opponent : user} was selected to go first, as ${xGoesFirst ? "X" : "O"}!\n(Use \`/play\` to choose a location; you can play anywhere this turn. ${xGoesFirst == (symbol == X) ? user : opponent} plays next.)`, files: [draw(game)] })).id;
       await db.set(id, game);
       await interaction.deleteReply();
     } else {

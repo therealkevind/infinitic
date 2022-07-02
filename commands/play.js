@@ -9,8 +9,9 @@ export const data = new SlashCommandBuilder()
   .setDescription('take your turn in a game')
   .addStringOption(option => option.setName("coords").setDescription("coordinates to place your piece at, in A1 notation").setRequired(true))
   .addUserOption(option => option.setName("opponent").setDescription("who you're playing against; required if you're currently playing multiple games in the same channel"));
+
 export async function execute(interaction) {
-  const coordText = interaction.options.getString("coords"),
+  const coordText = interaction.options.getString("coords").toUpperCase(),
     user = interaction.user,
     opponentId = interaction.options.getUser("opponent")?.id ?? await db.inferOpponentId(interaction.channelId, user.id);
 
@@ -51,7 +52,7 @@ export async function execute(interaction) {
   const won = game.play(x, y), image = draw(game);
 
   if (won) {
-    await interaction.reply({ content: game.winner == true ? `The game between ${user} and ${opponent} was a tie.` : `${user} wins as ${pieceStr} in their game against ${opponent}!`, files: [ image ] });
+    await interaction.reply({ content: game.winner == true ? `The game between ${user} (as ${pieceStr}) and ${opponent} ended in a tie.` : `${user} won (as ${pieceStr}) in their game against ${opponent}!`, files: [ image ] });
     await db.remove(id);
   } else {
     await interaction.reply({ content: `${user} made their move, at \`${coordText}\`. It's now ${opponent}'s turn, playing as ${pieceStr == "X" ? "O" : "X"}!\n(Use \`/play\` to choose a location; you can play ${game.requirementsAreTrivial() ? "anywhere" : `within \`${game.requirementsA1()}\``} this turn.)`, files: [ image ] })
