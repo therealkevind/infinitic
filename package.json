@@ -1,6 +1,6 @@
 {
   "name": "infinitic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Arbitrarily-nested Tic-Tac-Toe",
   "main": "index.js",
   "scripts": {
