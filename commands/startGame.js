@@ -8,23 +8,33 @@ import { MessageActionRow, MessageButton } from 'discord.js';
 export const data = new SlashCommandBuilder()
   .setName('start-game')
   .setDescription('starts a new game')
-  .addIntegerOption(option => option.setName("nest-level").setDescription("how many levels of tic-tac-toe to play").setMinValue(1).setRequired(true))
   .addUserOption(option => option.setName("opponent").setDescription("who to play against").setRequired(true))
-  .addStringOption(option => option.setName("symbol").setDescription("which symbol you want to use")
-    .addChoices({ name: "X", value: "X" }, { name: "O", value: "O" }));
+  .addIntegerOption(option => option.setName("depth").setDescription("how many levels of tic-tac-toe to play").setMinValue(1).setRequired(true))
+  .addIntegerOption(option => option.setName("width").setDescription("width of each board (default 3)").setMinValue(2))
+  .addIntegerOption(option => option.setName("height").setDescription("height of each board (default 3)").setMinValue(2))
+  .addIntegerOption(option => option.setName("goal").setDescription("number of symbols in a row to win each board (defaults to smaller of width and height)").setMinValue(1))
+  .addStringOption(option => option.setName("symbol").setDescription("which symbol you want to use (random by default)")
+    .addChoices({ name: "X", value: "X" }, { name: "O", value: "O" }))
+  .setDMPermission(false);
 
 export async function execute(interaction) {
   if (!interaction.inGuild()) {
     return interaction.reply({ content: `Sorry, DMs aren't supported at the moment.`, ephemeral: true });
   }
 
-  const nestLevel = BigInt(interaction.options.getInteger("nest-level")),
+  const nestLevel = BigInt(interaction.options.getInteger("depth")),
+    width = BigInt(interaction.options.getInteger("width") ?? 3),
+    height = BigInt(interaction.options.getInteger("height") ?? 3),
+    goal = BigInt(interaction.options.getInteger("goal") ?? Math.min(Number(width), Number(height))),
     symbol = (interaction.options.getString("symbol") ?? (Math.random()<.5?"O":"X")) == "X" ? O : X,
     opponent = interaction.options.getUser("opponent"),
     user = interaction.user;
 
   if (opponent.bot) {
     return interaction.reply({ content: `Can't play against bots.`, ephemeral: true });
+  }
+  if (goal > width && goal > height) {
+    return interaction.reply({ content: `You can't reach ${goal} in a row on a ${width} by ${height} board.`, ephemeral: true });
   }
 
   const id = db.idFor(interaction.channelId, user.id, opponent.id);
@@ -33,7 +43,7 @@ export async function execute(interaction) {
   }
 
   await interaction.reply({
-    content: `${opponent}, you are being challenged by ${user} to a ${nestLevel ? nestLevel + "-level " : ""}game of Tic-Tac-Toe! (You'll play as ${symbol == O ? "O" : "X"}.) Do you accept?`,
+    content: `${opponent}, you are being challenged by ${user} to a ${nestLevel > 1 ? nestLevel + "-level " : ""}game of ${width == 3 && height == 3 && goal == 3 ? "Tic-Tac-Toe" : goal + `-in-a-row (on a ${width} by ${height} board)`}! (You'll play as ${symbol == O ? "O" : "X"}.) Do you accept?`,
     components: [new MessageActionRow().addComponents(
       new MessageButton().setCustomId("accept-game").setLabel("Sure!").setStyle("PRIMARY"),
       new MessageButton().setCustomId("decline-game").setLabel("Nah").setStyle("SECONDARY"),
@@ -48,7 +58,7 @@ export async function execute(interaction) {
   collector.on("collect", async i => {
     if (i.customId == "accept-game") {
       const xGoesFirst = Math.random() < .5;
-      const game = Game.empty(Board.nested(nestLevel), xGoesFirst ? X : O);
+      const game = Game.empty(Board.nested(nestLevel, width, height, goal), xGoesFirst ? X : O);
       game.extraData = {};
       if (symbol == O) {
         game.extraData.O = opponent.id;

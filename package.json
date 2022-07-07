@@ -1,7 +1,7 @@
 {
   "name": "infinitic",
   "version": "1.0.0",
-  "description": "Infinitely-nested Tic-Tac-Toe",
+  "description": "Arbitrarily-nested Tic-Tac-Toe",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

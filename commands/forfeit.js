@@ -7,7 +7,8 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 export const data = new SlashCommandBuilder()
   .setName('forfeit')
   .setDescription('forfeit a game')
-  .addUserOption(option => option.setName("opponent").setDescription("who you're forfeiting against").setRequired(true));
+  .addUserOption(option => option.setName("opponent").setDescription("who you're forfeiting against").setRequired(true))
+  .setDMPermission(false);
 
 export async function execute(interaction) {
   const user = interaction.user,

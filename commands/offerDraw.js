@@ -8,7 +8,8 @@ import { MessageActionRow, MessageButton } from 'discord.js';
 export const data = new SlashCommandBuilder()
   .setName('offer-draw')
   .setDescription('offer a draw')
-  .addUserOption(option => option.setName("opponent").setDescription("who you're offering a draw with").setRequired(true));
+  .addUserOption(option => option.setName("opponent").setDescription("who you're offering a draw with").setRequired(true))
+  .setDMPermission(false);
 
 export async function execute(interaction) {
   const user = interaction.user,

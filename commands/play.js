@@ -8,7 +8,8 @@ export const data = new SlashCommandBuilder()
   .setName('play')
   .setDescription('take your turn in a game')
   .addStringOption(option => option.setName("coords").setDescription("coordinates to place your piece at, in A1 notation").setRequired(true))
-  .addUserOption(option => option.setName("opponent").setDescription("who you're playing against; required if you're currently playing multiple games in the same channel"));
+  .addUserOption(option => option.setName("opponent").setDescription("who you're playing against; required if you're currently playing multiple games in the same channel"))
+  .setDMPermission(false);
 
 export async function execute(interaction) {
   const coordText = interaction.options.getString("coords").toUpperCase(),
