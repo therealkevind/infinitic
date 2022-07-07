@@ -4,18 +4,23 @@ export class Board {
   #winner;
   #subboards;
   #width; #subwidth;
-  static #SIZE = 3n;
+  #height; #subheight;
+  static #WIDTH = 4n;
+  static #HEIGHT = 2n;
 
   constructor(subboards, winner = null) {
     if (subboards != null) {
-      if (subboards.length != Board.#SIZE || subboards.some(row => row.length != Board.#SIZE || row.some(board => !(board instanceof Board)))) throw new TypeError("invalid subboards");
+      if (subboards.length != Board.#HEIGHT || subboards.some(row => row.length != Board.#WIDTH || row.some(board => !(board instanceof Board)))) throw new TypeError("invalid subboards");
       this.#subboards = subboards.map(row => row.slice());
       this.#subwidth = subboards[0][0].#width;
-      this.#width = Board.#SIZE * this.#subwidth;
+      this.#subheight = subboards[0][0].#height;
+      this.#width = Board.#WIDTH * this.#subwidth;
+      this.#height = Board.#HEIGHT * this.#subheight;
     } else {
       this.#subboards = null;
       this.#winner = winner;
       this.#width = 1n;
+      this.#height = 1n;
     }
     this.#winner = winner;
   }
@@ -45,7 +50,7 @@ export class Board {
 
   static nested(nestLevel) {
     return new Board(nestLevel > 0n
-      ? Array.from({length: Number(Board.#SIZE)}, ()=>Array.from({length: Number(Board.#SIZE)}, ()=>Board.nested(nestLevel - 1n)))
+      ? Array.from({length: Number(Board.#HEIGHT)}, ()=>Array.from({length: Number(Board.#WIDTH)}, ()=>Board.nested(nestLevel - 1n)))
       : null);
   }
 
@@ -53,14 +58,14 @@ export class Board {
   put(symbol, x, y) {
     if (symbol != X && symbol != O) throw new TypeError("expected a tic-tac-toe piece");
     x = BigInt(x); y = BigInt(y);
-    if (!this.isOpen(x, y)) throw new ValueError("position is taken");
+    if (!this.isOpen(x, y)) throw new Error("position is taken");
     return this.#put(symbol, x, y);
   }
 
   // is the space open?
   isOpen(x, y) {
     x = BigInt(x); y = BigInt(y);
-    if (!this.#isInRange(x, y)) throw new ValueError("position out of range");
+    if (!this.#isInRange(x, y)) throw new Error("position out of range");
     let board = this;
     do {
       if (board.#winner) return false;
@@ -69,12 +74,12 @@ export class Board {
   }
 
   #isInRange(x, y) {
-    return x >= 0 && x < this.#width && y >= 0 && y < this.#width;
+    return x >= 0 && x < this.#width && y >= 0 && y < this.#height;
   }
 
   // helper
   #subboard(x, y) {
-    return this.#subboards?.[y / this.#subwidth % Board.#SIZE][x / this.#subwidth % Board.#SIZE];
+    return this.#subboards?.[y / this.#subheight % Board.#HEIGHT][x / this.#subwidth % Board.#WIDTH];
   }
 
   // puts the symbol, and returns whether this board was won or tied as a result of the move. does not error-check.
@@ -95,7 +100,7 @@ export class Board {
 
   // did the given move win this board?
   #checkWinner(symbol, x, y) {
-    y = y / this.#subwidth % Board.#SIZE; x = x / this.#subwidth % Board.#SIZE;
+    y = y / this.#subheight % Board.#HEIGHT; x = x / this.#subwidth % Board.#WIDTH;
     const n = 3;
     {
       let count = 1;
@@ -127,15 +132,15 @@ export class Board {
   // ctx: 2d canvas context; board drawn in middle
   // x, y: location of most recent move
   draw(ctx, x, y) {
-    const K = Number(Board.#SIZE) + 1;
+    const KX = Number(Board.#WIDTH) + 1, KY = Number(Board.#HEIGHT) + 1, K = Math.min(KX, KY);
     if (this.#subboards) {
       ctx.save();
       if (this.#winner) ctx.globalAlpha *= .5;
-      ctx.scale(1/K, 1/K);
+      ctx.scale(1/KX, 1/KY);
       ctx.translate(0.5, 0.5);
       for (const [i, row] of this.#subboards.entries()) {
         const rowTransform = ctx.getTransform();
-        const ty = y - this.#subwidth * BigInt(i);
+        const ty = y - this.#subheight * BigInt(i);
         for (const [j, subboard] of row.entries()) {
           const tx = x - this.#subwidth * BigInt(j);
           subboard.draw(ctx, tx, ty);
@@ -144,23 +149,30 @@ export class Board {
         ctx.setTransform(rowTransform);
         ctx.translate(0, 1);
       }
-      // we're translated s.t. origin's at what was previously (0, K), so:
+      const [adjX, adjY] = ((phyX, phyY, phyM = Math.min(phyX, phyY)) => [phyM/phyX, phyM/phyY])(this.getPhysicalWidth()/KX, this.getPhysicalHeight()/KY);
+      // we're translated s.t. origin's at what was previously (0, KY), so:
       ctx.strokeStyle = "black";
-      ctx.lineWidth = 0.5/K;
+      ctx.lineWidth = 0.5/K * adjX;
       ctx.beginPath();
-      for (let i = 1; i < Board.#SIZE; i++) {
+      for (let i = 1; i < Board.#WIDTH; i++) {
         ctx.moveTo(i, -.1);
-        ctx.lineTo(i, .1-Number(Board.#SIZE));  // these two lines are never connected
+        ctx.lineTo(i, .1-Number(Board.#HEIGHT));
+      }
+      ctx.stroke();
+      ctx.lineWidth = 0.5/K * adjY;
+      ctx.beginPath();
+      for (let i = 1; i < Board.#HEIGHT; i++) {
         ctx.moveTo(.1, -i);
-        ctx.lineTo(Number(Board.#SIZE)-.1, -i);
+        ctx.lineTo(Number(Board.#WIDTH)-.1, -i);
       }
       ctx.stroke();
       ctx.restore();
     }
     if (this.#winner) {
+      const [adjX, adjY] = ((phyX, phyY, phyM = Math.min(phyX, phyY)) => [phyM/phyX, phyM/phyY])(this.getPhysicalWidth(), this.getPhysicalHeight());
       ctx.save();
       ctx.translate(0.5, 0.5);
-      ctx.scale((K-1)/K, (K-1)/K);
+      ctx.scale((K-1)/K * adjX, (K-1)/K * adjY);
       if (this.#isInRange(x,y)) {
         ctx.fillStyle = "red";
       } else ctx.fillStyle = "black";
@@ -184,23 +196,26 @@ export class Board {
   }
 
   rangeFollowing(prevX, prevY) {
-    let x = prevX * Board.#SIZE % this.#width , y = prevY * Board.#SIZE % this.#width;
+    let x = prevX * Board.#WIDTH % this.#width , y = prevY * Board.#HEIGHT % this.#height;
     return this.#rangeWith(x, y);
   }
   #rangeWith(x, y) {
     if (this.#winner || !this.#subboards || this.#subboards.every(row => row.every(board => board.#winner))) {
       return false;
     } else {
-      const nextRange = this.#subboard(x, y).#rangeWith(x % this.#subwidth, y % this.#subwidth);
-      if (!nextRange) return Array(2).fill(new Range(0n, this.#width));
+      const nextRange = this.#subboard(x, y).#rangeWith(x % this.#subwidth, y % this.#subheight);
+      if (!nextRange) return [new Range(0n, this.#width), new Range(0n, this.#height)];
       const [xRange, yRange] = nextRange;
-      const dx = x / this.#subwidth * this.#subwidth, dy = y / this.#subwidth * this.#subwidth;
+      const dx = x / this.#subwidth * this.#subwidth, dy = y / this.#subheight * this.#subheight;
       return [xRange.offset(dx), yRange.offset(dy)];
     }
   }
 
   get winner() { return this.#winner; }
-  get size() { return this.#width; }
+  get width() { return this.#width; }
+  get height() { return this.#height; }
+  getPhysicalWidth() { return this.#height > 1 ? Number(Board.#WIDTH + 1n) ** (Math.log(Number(this.#width))/Math.log(Number(Board.#WIDTH))) : 1; }
+  getPhysicalHeight() { return this.#height > 1 ? Number(Board.#HEIGHT + 1n) ** (Math.log(Number(this.#height))/Math.log(Number(Board.#HEIGHT))) : 1; }
 
   static lettersToNumber(letters) {
     if (!(typeof letters == "string") || !letters.match(/^[A-Z]+$/i)) throw new TypeError("expected a string of letters");
@@ -219,7 +234,8 @@ export class Board {
     }
     return str;
   }
-  static get SIZE() { return Board.#SIZE; }
+  static get WIDTH() { return Board.#WIDTH; }
+  static get HEIGHT() { return Board.#HEIGHT; }
 }
 
 class Range {
@@ -255,8 +271,12 @@ export class Game {
     this.#board = board;
     this.#whoseTurn = whoseTurn;
     this.#lastTurn = lastTurn;
-    this.#moveRequirements = lastTurn ? board.rangeFollowing(...lastTurn) : Array(2).fill(new Range(0n, this.#board.size));
+    this.#moveRequirements = lastTurn ? board.rangeFollowing(...lastTurn) : this.#defaultRange();
     this.extraData = extraData;
+  }
+
+  #defaultRange() {
+    return [new Range(0n, this.#board.width), new Range(0n, this.#board.height)];
   }
 
   static empty(board, firstPlayer = X) {
@@ -294,9 +314,10 @@ export class Game {
       this.#lastTurn = [x,y];
       this.#moveRequirements = this.#board.rangeFollowing(x, y);
       return !this.#whoseTurn;
-    } else throw new ValueError("invalid move");
+    } else throw new Error("invalid move");
   }
-  getSize() { return 20 * Number(Board.SIZE + 1n) ** (Math.log(Number(this.#board.size))/Math.log(Number(Board.SIZE))); }
+  getWidth() { return 20 * this.#board.getPhysicalWidth(); }
+  getHeight() { return 20 * this.#board.getPhysicalHeight(); }
   draw(canvas) {
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "white";
@@ -310,26 +331,29 @@ export class Game {
   }
   #drawColLabels(ctx) {
     ctx.save();
-    const SIZE = Number(Board.SIZE), K = SIZE + 1;
-    ctx.translate(0, .5/K);
-    for (let i = this.#board.size; i > 0n; i /= Board.SIZE + 1n) {
-      ctx.scale(1/K, 1/K);
+    const WIDTH = Number(Board.WIDTH), KX = WIDTH + 1, KY = Number(Board.HEIGHT) + 1;
+    ctx.translate(0, .5/KY);
+    for (let i = this.#board.width; i > 1n; i /= Board.WIDTH) {
+      ctx.scale(1/KX, 1/KY);
       ctx.translate(.5, 0);
     }
-    // ctx.translate(0.5,-0.5)
+    ctx.translate(0.5,0.05)
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "black";
-    for (let i = 0n; i < this.#board.size; i++) {
+    for (let i = 0n; i < this.#board.width; i++) {
       ctx.globalAlpha = this.#moveRequirements[0]?.contains(i) ? 1 : .5;
       ctx.font = this.#moveRequirements[0]?.contains(i) ? "bold 1px Calibri" : "1px Calibri";
       // centered in a 1 wide by .5 tall rectangle
-      ctx.fillText(Board.numberToLetters(i + 1n), .5, -.25);
+      ctx.save();
+      if (this.#board.width >= 26n) ctx.rotate(-3*Math.PI/8), ctx.textAlign = "left", ctx.translate(-0.3,-0.15);
+      ctx.fillText(Board.numberToLetters(i + 1n), 0, -0.2);
+      ctx.restore();
       {
         let total = 1;
-        let factor = 1/K;
-        for (let n = i+1n; n % Board.SIZE == 0n; n /= Board.SIZE) {
-          factor *= K;
+        let factor = 1/KX;
+        for (let n = i+1n; n % Board.WIDTH == 0n; n /= Board.WIDTH) {
+          factor *= KX;
           total += factor;
         }
         ctx.translate(total, 0);
@@ -339,26 +363,26 @@ export class Game {
   }
   #drawRowLabels(ctx) {
     ctx.save();
-    const SIZE = Number(Board.SIZE), K = SIZE + 1;
-    ctx.translate(.5/K, 0);
-    for (let i = this.#board.size; i > 0n; i /= Board.SIZE + 1n) {
-      ctx.translate(0, .5/K);
-      ctx.scale(1/K, 1/K);
+    const HEIGHT = Number(Board.HEIGHT), KY = HEIGHT + 1, KX = Number(Board.WIDTH) + 1;
+    ctx.translate(.5/KX, 0);
+    for (let i = this.#board.height; i > 1n; i /= Board.HEIGHT) {
+      ctx.translate(0, .5/KY);
+      ctx.scale(1/KX, 1/KY);
     }
     ctx.translate(0,-0.2);
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "black";
-    for (let i = 0n; i < this.#board.size; i++) {
+    for (let i = 0n; i < this.#board.height; i++) {
       ctx.globalAlpha = this.#moveRequirements[1]?.contains(i) ? 1 : .5;
       ctx.font = this.#moveRequirements[1]?.contains(i) ? "bold 1px Calibri" : "1px Calibri";
-      // centered in a 1 wide by .5 tall rectangle
+      // centered in a .5 wide by 1 tall rectangle
       ctx.fillText(String(i + 1n), 0.25, .5);
       {
         let total = 1;
-        let factor = 1/K;
-        for (let n = i+1n; n % Board.SIZE == 0n; n /= Board.SIZE) {
-          factor *= K;
+        let factor = 1/KY;
+        for (let n = i+1n; n % Board.HEIGHT == 0n; n /= Board.HEIGHT) {
+          factor *= KY;
           total += factor;
         }
         ctx.translate(0, total);
@@ -369,7 +393,7 @@ export class Game {
 
   requirementsAreTrivial() {
     const [rx, ry] = this.#moveRequirements;
-    return rx.min == 0 && ry.min == 0 && rx.max == this.#board.size && ry.max == this.#board.size;
+    return rx.min == 0 && ry.min == 0 && rx.max == this.#board.width && ry.max == this.#board.height;
   }
   requirementsA1() {
     const [rx, ry] = this.#moveRequirements;

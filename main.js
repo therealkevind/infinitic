@@ -2,13 +2,14 @@ import {X, O, Board, Game} from "./board.js";
 
 document.addEventListener("DOMContentLoaded", ()=>{
 
-  const game = Game.empty(Board.nested(1n));
+  const game = Game.empty(Board.nested(3n));
 
   const gameCanvas = document.getElementById("game-board"),
     coordInput = document.getElementById("coords"),
     moveButton = document.getElementById("move");
 
-  gameCanvas.width = gameCanvas.height = game.getSize();
+  gameCanvas.width = game.getWidth();
+  gameCanvas.height = game.getHeight();
   game.draw(gameCanvas);
 
   moveButton.addEventListener("click", ()=>{
