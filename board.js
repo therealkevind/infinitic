@@ -29,9 +29,9 @@ export class Board {
   }
 
   toJSON(key) {
-    return {winner: this.#winner == X ? 1 : this.#winner == O ? 0 : null, subboards: this.#subboards, WIDTH: this.#WIDTH.toString(), HEIGHT: this.#HEIGHT.toString()};
+    return {winner: this.#winner == X ? 1 : this.#winner == O ? 0 : undefined, ...(this.#subboards ? {subboards: this.#subboards} : {})};
   }
-  static reviver(key, value) {
+  static #reviver(key, value, WIDTH, HEIGHT) {
     if (typeof value == "number") {
       switch (value) {
         case 1: return X;
@@ -40,12 +40,12 @@ export class Board {
       }
     } else if (typeof value == "string") {
       return BigInt(value);
-    } else if (typeof value == "object" && value != null && Object.hasOwn(value, "subboards")) {
-      return new Board(value.subboards, value.winner, value.WIDTH, value.HEIGHT);
+    } else if (typeof value == "object" && value != null && !Array.isArray(value)) {
+      return new Board(value.subboards ?? null, value.winner, WIDTH, HEIGHT);
     } else return value;
   }
-  static fromJSON(json) {
-    return JSON.parse(json, (key, value) => Board.reviver(key, value));
+  static fromJSON(json, WIDTH, HEIGHT) {
+    return JSON.parse(json, (key, value) => Board.#reviver(key, value, WIDTH, HEIGHT));
   }
 
   static nested(depth, WIDTH = 3n, HEIGHT = 2n, GOAL = 2n) {
@@ -284,14 +284,13 @@ export class Game {
   }
 
   toJSON() {
-    return {board: JSON.stringify(this.#board), whoseTurn: this.#whoseTurn == X ? 1 : 0, lastTurn: this.#lastTurn?.map(i => i.toString()), extraData: this.extraData};
+    return {board: this.#board, whoseTurn: this.#whoseTurn == X ? 1 : 0, lastTurn: this.#lastTurn?.map(i => i.toString()), WIDTH: this.#board.WIDTH.toString(), HEIGHT: this.#board.HEIGHT.toString(), extraData: this.extraData};
   }
 
   static fromJSON(json) {
     return JSON.parse(json, (key, value) => {
-      if (key == "board") return Board.fromJSON(value);
-      else if (key) return value;
-      else return new Game(value.board, value.whoseTurn ? X : O, value.lastTurn?.map(i => BigInt(i)), value.extraData);
+      if (key) return value;
+      else return new Game(Board.fromJSON(JSON.stringify(value.board), BigInt(value.WIDTH), BigInt(value.HEIGHT)), value.whoseTurn ? X : O, value.lastTurn?.map(i => BigInt(i)), value.extraData);
     })
   }
 

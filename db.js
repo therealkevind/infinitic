@@ -5,10 +5,6 @@ import { Collection } from "discord.js";
 
 const map = new Collection();
 
-function urlFor(id) {
-  return new URL(`./db/${id}.json`, import.meta.url);
-}
-
 export function idFor(channelId, ...playerIds) {
   playerIds.sort();
   return channelId + "-" + playerIds.join("-");
@@ -44,11 +40,11 @@ export async function get(id) {
 export async function update(id) {
   await backend.update(id, JSON.stringify(map.get(id)));
 }
-export async function set(id, board) {
-  await backend.write(id, JSON.stringify(board));
-  map.set(id, board);
+export async function set(id, game) {
+  await backend.write(id, JSON.stringify(game));
+  map.set(id, game);
 }
 export async function remove(id) {
-  await fs.rm(urlFor(id));
+  await backend.remove(id);
   map.delete(id);
 }
