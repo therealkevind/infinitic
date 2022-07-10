@@ -9,12 +9,12 @@ export class Board {
   #HEIGHT;
   #GOAL;
 
-  constructor(subboards, winner = null, WIDTH, HEIGHT, GOAL) {
+  constructor(subboards, winner = null, WIDTH, HEIGHT, GOAL = WIDTH > HEIGHT ? HEIGHT : WIDTH) {
     this.#WIDTH = WIDTH;
     this.#HEIGHT = HEIGHT;
     this.#GOAL = GOAL;
     if (subboards != null) {
-      if (subboards.length != this.#HEIGHT || subboards.some(row => row.length != this.#WIDTH || row.some(board => !(board instanceof Board && board.#WIDTH == this.#WIDTH && board.#HEIGHT == this.#HEIGHT)))) throw new TypeError("invalid subboards");
+      if (subboards.length != this.#HEIGHT || subboards.some(row => row.length != this.#WIDTH || row.some(board => board != null && !(board instanceof Board && board.#WIDTH == this.#WIDTH && board.#HEIGHT == this.#HEIGHT)))) throw new TypeError("invalid subboards");
       this.#subboards = subboards.map(row => row.slice());
       this.#subwidth = subboards[0][0].#width;
       this.#subheight = subboards[0][0].#height;
@@ -29,7 +29,7 @@ export class Board {
   }
 
   toJSON(key) {
-    return {winner: this.#winner == X ? 1 : this.#winner == O ? 0 : undefined, ...(this.#subboards ? {subboards: this.#subboards} : {})};
+    return {winner: this.#winner == X ? 1 : this.#winner == O ? 0 : undefined, ...(this.#subboards ? {subboards: this.#subboards} : {}), ...(this.#GOAL < this.#WIDTH && this.#GOAL < this.#HEIGHT ? {goal: this.#GOAL} : {})};
   }
   static #reviver(key, value, WIDTH, HEIGHT) {
     if (typeof value == "number") {
@@ -41,14 +41,14 @@ export class Board {
     } else if (typeof value == "string") {
       return BigInt(value);
     } else if (typeof value == "object" && value != null && !Array.isArray(value)) {
-      return new Board(value.subboards ?? null, value.winner, WIDTH, HEIGHT);
+      return new Board(value.subboards ?? null, value.winner, WIDTH, HEIGHT, value.goal);
     } else return value;
   }
   static fromJSON(json, WIDTH, HEIGHT) {
     return JSON.parse(json, (key, value) => Board.#reviver(key, value, WIDTH, HEIGHT));
   }
 
-  static nested(depth, WIDTH = 3n, HEIGHT = 2n, GOAL = 2n) {
+  static nested(depth, WIDTH = 3n, HEIGHT = 3n, GOAL) {
     return new Board(depth > 0n
       ? Array.from({length: Number(HEIGHT)}, ()=>Array.from({length: Number(WIDTH)}, ()=>Board.nested(depth - 1n, WIDTH, HEIGHT, GOAL)))
       : null, null, WIDTH, HEIGHT, GOAL);
