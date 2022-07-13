@@ -1,7 +1,8 @@
 import {Game} from "../public/board.js";
 
-import * as backend from "./db-backend.js";
 import { Collection } from "discord.js";
+
+const backend = await import(`./backends/${process.env.backend ?? "file"}.js`);
 
 const map = new Collection();
 
@@ -14,7 +15,7 @@ export async function inferOpponentId(channelId, playerId) {
   let match;
   if (options.size > 1) return false;
   else if (options.size == 0) {
-    const moreOptions = (await backend.list()).filter(key => key.startsWith(channelId) && key.includes("-" + playerId));
+    const moreOptions = (await backend.list(channelId)).filter(key => key.includes("-" + playerId));
     if (moreOptions.length > 1) return false;
     else if (moreOptions.length == 0) return null;
     else match = moreOptions[0];

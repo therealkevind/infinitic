@@ -28,6 +28,6 @@ export async function remove(id) {
   await fs.rm(urlFor(id));
 }
 
-export async function list() {
-  return (await fs.readdir(new URL(`./db/`, import.meta.url))).map(key => path.basename(key, ".json"));
+export async function list(prefix) {
+  return (await fs.readdir(new URL(`./db/`, import.meta.url))).filter(key => key.startsWith(prefix)).map(key => path.basename(key, ".json"));
 }
