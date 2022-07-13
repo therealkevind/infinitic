@@ -1,6 +1,6 @@
-import {X, O, Board, Game} from "../board.js";
-import draw from "../draw.js";
-import * as db from "../db.js";
+import {X, O, Board, Game} from "../public/board.js";
+import draw from "../src/draw.js";
+import * as db from "../src/db.js";
 
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { MessageActionRow, MessageButton } from 'discord.js';

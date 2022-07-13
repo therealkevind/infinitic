@@ -1,4 +1,4 @@
-import {Game} from "./board.js";
+import {Game} from "../public/board.js";
 
 import * as backend from "./db-backend.js";
 import { Collection } from "discord.js";

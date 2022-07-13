@@ -1,4 +1,3 @@
-import {X, O, Board, Game} from "./board.js";
 import Canvas from "@napi-rs/canvas";
 import { MessageAttachment } from "discord.js";
 

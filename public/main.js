@@ -25,13 +25,12 @@ document.addEventListener("DOMContentLoaded", ()=>{
       else if (!game.isOpen(x, y)) alert("Those coordinates are taken!");
       else {
         if (game.play(x, y)) switch (game.winner) {
-          case "X": alert("X wins!"); break;
-          case "O": alert("O wins!"); break;
+          case X: alert("X wins!"); break;
+          case O: alert("O wins!"); break;
           default: alert("It's a tie.");
         }
         game.draw(gameCanvas);
       }
     } else alert("Invalid coordinates!");
   });
-
 });
