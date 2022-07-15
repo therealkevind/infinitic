@@ -4,28 +4,51 @@
     <meta charset="utf-8">
     <title>INFINITIC</title>
     <script type=module src=main.js></script>
+    <style>
+      #game-board {
+        max-height: 100vh;
+        max-width: 100vw;
+      }
+      #instructions .text {
+        display: none;
+      }
+      #instructions.shallow .shallow,
+      #instructions.deep .deep,
+      #instructions.deeper .deeper {
+        display: revert;
+      }
+    </style>
   </head>
   <body>
     <details id="settings-detail" open>
       <summary>Game settings</summary>
       <form id="settings">
         <p>Size: <input type="number" id="width" placeholder="3" min=2 max=999 step=1 title="Width of the board"> &times; <input type="number" id="height" placeholder="3" min=2 max=999 step=1 title="Height of the board">, depth <input type="number" id="depth" placeholder="1" min=1 max=9 step=1 title="Number of levels">
-        <p>Goal: <input type="number" id=goal placeholder="3" min=2 max=999 step=1 title="Number in a row needed to win a board">
+        <p>Goal: <input type="number" id=goal placeholder="3" min=2 max=999 step=1 title="Number in a row needed to win a board"> in a row
         <p><button type=submit id=start>Start game!</button>
       </form>
     </details>
     <form id="game">
       <p><input type="text" id="coords" pattern="[A-Za-z]+[0-9]+" disabled required autocomplete="off"> <button type="submit" id="move" disabled autocomplete="off" title="Location, in A1 notation">Make move!</button></p>
-      <canvas id="game-board" width="0" height="0" style="max-height:100vh; max-width: 100vw"></canvas>
+      <canvas id="game-board" width="0" height="0"></canvas>
     </form>
     <details>
       <summary>How to play</summary>
+      <div id="instructions" class="deeper">
+        <p>Players alternate placing X's and O's in empty spaces.
+        <p class="deep deeper text">The available locations are further restricted by the position of the most recent move: a move's position within <span class="deep text">the small board</span><span class="deeper text">a second-to-largest board</span> corresponds to the position of the small board in the large board that the next move can take place within. If that board is won or otherwise filled, the next move can instead be placed anywhere<span class="deeper text"> within the smallest unfilled board containing that one</span>. Note that only small pieces can be placed this way.
+        <p>The goal <span class="deep deeper text">in each board, whether large or small,</span><span class="shallow text">of the game</span> is to get <span class="goal">3</span> of your pieces in a row. <span class="deep deeper text">Winning a smaller board claims it, placing a larger copy of your piece there on the larger board.</span>
+      </div>
     </details>
     <details>
       <summary>How to use this program</summary>
+      <p>There are two ways to use the program: via this website, or via the bot. You know how to do the former. As for the latter...
+      <p>Invite the bot via <a href="<%= inviteUrl %>">this link</a>. Then use the slash commands to perform the same actions as you would here. Note that you're required to explicitly end games.
     </details>
     <details>
       <summary>About</summary>
+      <p>By therealkevind
+      <p>Fork me on <a href="">GitHub</a>, or on <a href="">Replit</a>
     </details>
   </body>
 </html>
