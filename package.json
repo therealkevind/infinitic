@@ -23,6 +23,16 @@
     "node": ">=16.15.0"
   },
   "devDependencies": {
+    "@replit/database": "^2.0.2",
     "dotenv": "^16.0.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/therealkevind/infinitic.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/therealkevind/infinitic/issues"
+  },
+  "homepage": "https://github.com/therealkevind/infinitic#readme"
 }
